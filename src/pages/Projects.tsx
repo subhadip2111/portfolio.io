@@ -19,6 +19,7 @@ import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import axios from 'axios';
+import Loader from '../components/common/Loader';
 
 const Projects: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +37,6 @@ const Projects: React.FC = () => {
             'Content-Type': 'application/json',
           }
         })
-      console.log('api response', response?.data?.data)
       setProjects(response?.data?.data)
     } catch (error) {
       console.log(error)
@@ -92,7 +92,6 @@ const Projects: React.FC = () => {
           'Content-Type': 'application/json',
         }
       })
-      console.log("github stats", response.data)
       setGithubStats(response?.data)
     } catch (error) {
       console.log(error)
@@ -120,7 +119,6 @@ const Projects: React.FC = () => {
           'Content-Type': 'application/json',
         }
       })
-      console.log("github stats", response.data)
       setGithubStats(response?.data)
     } catch (error) {
       console.log(error)
@@ -166,12 +164,7 @@ const Projects: React.FC = () => {
 
   if (!projects) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <span className="text-muted-foreground">Loading projects...</span>
-        </div>
-      </div>
+      <Loader/>
     );
   }
 
@@ -451,7 +444,7 @@ const Projects: React.FC = () => {
                                   key={language}
                                   className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20"
                                 >
-                                  {language}: {typeof bytes === 'number' ? `${Math.round(bytes / 1024)}KB` : bytes}
+                                  {language}: {typeof bytes === 'number' ? `${Math.round(bytes / 1024)}KB` : String(bytes)}
                                 </span>
                               ))}
                             </div>

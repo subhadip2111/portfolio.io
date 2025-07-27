@@ -17,10 +17,15 @@ import { Button } from '../components/ui/button';
 import AIAssistant from '../components/AIAssistant';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import axios from 'axios';
+import Loader from '../components/common/Loader';
+import ProjectDetails from './ProjectDetails';
+import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
     const [leetcodeResponse, setLetcodeResponse] = useState<any>(null)
     const [projectsData,setProjectsData]=useState<any>(null);
+      const [showDetails, setShowDetails] = useState(false);
+const navigate = useNavigate();
     const getDsaData = async () => {
         try {
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_DEV_URL}/leetcode/sync`, {
@@ -31,7 +36,6 @@ const Home: React.FC = () => {
                 }
             })
             setLetcodeResponse(response?.data?.data)
-            console.log('apiresp', response?.data?.data.matchedUser?.submissionCalendar)
         }
 
         catch (error) {
@@ -74,8 +78,9 @@ try {
         getDsaData()
 getDevelopmentData()
     }, [])
- 
-console.log(projectsData)
+ if(!leetcodeResponse || !projectsData ){
+    return (<Loader/>)
+ }
     return (
         <div className="container py-8 space-y-8">
             {/* Hero Section */}
@@ -226,10 +231,12 @@ console.log(projectsData)
           >
             {project.status}
           </Badge>
-          <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-200">
+          <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-200" onClick={() => navigate(`/projectDetails/${project?.id}`)}
+  >
             <GitBranch className="w-4 h-4 mr-2" />
             View Details
           </Button>
+      
         </div>
       </CardContent>
     </Card>

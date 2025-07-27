@@ -66,7 +66,6 @@ const Register: React.FC = () => {
                 }
 
             )
-            console.log('register user data', response.data)
             setRegisterUser(response?.data)
             setIsLoading(false)
             setSuccess(true)

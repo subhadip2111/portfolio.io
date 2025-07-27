@@ -47,22 +47,7 @@ const accessToken=useSelector((state :any)=>state.auth.accessToken)
           </div>
           
            <div className="flex items-center space-x-6">
-     <div className="flex items-center space-x-6">
-      {accessToken ? (
-        <Button asChild>
-          <Link to="/home">Get Started</Link>
-        </Button>
-      ) : (
-        <>
-          <Button asChild>
-            <Link to="/login">Sign In</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/register">Sign Up</Link>
-          </Button>
-        </>
-      )}
-    </div>
+  
     </div>
         </nav>
 
@@ -87,20 +72,19 @@ const accessToken=useSelector((state :any)=>state.auth.accessToken)
               <Button 
                 size="lg" 
                 className="ai-button text-lg px-8 py-6"
-                onClick={() => navigate('/register')}
+                onClick={() => navigate('/home')}
               >
                 Explore Portfolio
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="text-lg px-8 py-6 glass-effect border-primary/20 hover:border-primary/40"
-                onClick={() => navigate('/login')}
-              >
-                <Github className="mr-2 w-5 h-5" />
-                View Code
-              </Button>
+           <Link 
+  to="https://github.com/subhadip2111"
+  className="flex items-center gap-2 text-lg px-6 py-3 border rounded-md border-primary/20 hover:border-primary/40 transition-colors duration-200"
+>
+  <Github className="w-5 h-5" />
+  <span>View Code</span>
+</Link>
+
             </div>
           </div>
         </div>
@@ -154,7 +138,7 @@ const accessToken=useSelector((state :any)=>state.auth.accessToken)
         </div>
 
         {/* CTA Section */}
-        <div className="py-20 px-6">
+        {/* <div className="py-20 px-6">
           <div className="max-w-4xl mx-auto text-center">
             <div className="ai-card p-12 rounded-2xl space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold">
@@ -183,7 +167,7 @@ const accessToken=useSelector((state :any)=>state.auth.accessToken)
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
