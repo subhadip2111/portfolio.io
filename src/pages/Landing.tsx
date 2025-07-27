@@ -3,9 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Code2, Brain, Zap, Github, Linkedin } from 'lucide-react';
 // import heroImage from '@/assets/hero-bg.jpg';
 import { Button } from '../components/ui/button';
+import { useSelector } from 'react-redux';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
+  const user=useSelector((state :any)=>state.auth.user)
+const accessToken=useSelector((state :any)=>state.auth.accessToken)
+
+
+
+
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -39,14 +46,24 @@ const Landing: React.FC = () => {
             </span>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button asChild className="ai-button">
-              <Link to="/register">Get Started</Link>
-            </Button>
-          </div>
+           <div className="flex items-center space-x-6">
+     <div className="flex items-center space-x-6">
+      {accessToken ? (
+        <Button asChild>
+          <Link to="/home">Get Started</Link>
+        </Button>
+      ) : (
+        <>
+          <Button asChild>
+            <Link to="/login">Sign In</Link>
+          </Button>
+          <Button asChild>
+            <Link to="/register">Sign Up</Link>
+          </Button>
+        </>
+      )}
+    </div>
+    </div>
         </nav>
 
         {/* Hero Section */}
