@@ -12,6 +12,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as Sonner } from "./components/ui/sonner";
+import ProjectDetails from "./pages/ProjectDetails";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,8 @@ const App = () => (
               <Route path="/register" element={<Register />} />
               <Route path="/home" element={<Home />} />
               <Route path="/projects" element={<Projects />} />
+              <Route path="/projectDetails/:id" element={<ProjectDetails />} />
+
               <Route path="/profile" element={<Profile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

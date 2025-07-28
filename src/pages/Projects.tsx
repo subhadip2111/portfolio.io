@@ -1,309 +1,517 @@
-import React, { useState } from 'react';
-
-import { 
-  Github, 
-  ExternalLink, 
-  GitBranch, 
-  GitCommit, 
-  Star, 
-  Clock,
+import React, { useEffect, useState } from 'react';
+import {
+  Github,
+  ExternalLink,
+  GitBranch,
+  GitCommit,
+  Star,
   Filter,
   Search,
   Users,
-  Calendar,
-  Activity
+  Activity,
+  Clock,
+  Zap,
+  Loader2
 } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import axios from 'axios';
+import Loader from '../components/common/Loader';
 
 const Projects: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [projects, setProjects] = useState<any>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [githubStats, setGithubStats] = useState<any>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
-  // Mock project data with GitHub activity
-  const projects = [
-    {
-      id: 1,
-      title: "AI Chat Application",
-      description: "A real-time chat application with AI integration using OpenAI's GPT. Features include message history, typing indicators, and smart responses.",
-      longDescription: "This project demonstrates my ability to integrate AI services into real-time applications. I built this to explore conversational AI and improve user engagement through intelligent responses.",
-      whyBuilt: "I wanted to understand how AI can enhance user interactions and create more engaging chat experiences. This project helped me learn about WebSocket connections, AI API integration, and real-time data handling.",
-      tech: ["React", "Node.js", "OpenAI", "Socket.io", "MongoDB"],
-      status: "Live",
-      category: "development",
-      githubUrl: "https://github.com/user/ai-chat",
-      liveUrl: "https://ai-chat-demo.com",
-      stars: 24,
-      forks: 8,
-      lastCommit: "2 hours ago",
-      commits: 156,
-      contributors: 3,
-      activity: [
-        { type: "commit", message: "Add message encryption", time: "2 hours ago", author: "You" },
-        { type: "pr", message: "Feature: Voice messages support", time: "1 day ago", author: "contributor1" },
-        { type: "commit", message: "Fix typing indicator bug", time: "2 days ago", author: "You" },
-        { type: "issue", message: "Add dark mode support", time: "3 days ago", author: "contributor2" }
-      ]
-    },
-    {
-      id: 2,
-      title: "Portfolio Dashboard",
-      description: "Interactive developer portfolio with real-time GitHub integration, analytics, and AI-powered chat assistant.",
-      longDescription: "A comprehensive portfolio solution that showcases not just projects, but also provides real-time insights into development activity and progress.",
-      whyBuilt: "Traditional portfolios are static. I wanted to create a dynamic experience that shows my active development process and allows visitors to interact with my work.",
-      tech: ["React", "TypeScript", "Tailwind CSS", "GitHub API", "Chart.js"],
-      status: "Development",
-      category: "development",
-      githubUrl: "https://github.com/user/portfolio",
-      liveUrl: "https://portfolio-demo.com",
-      stars: 12,
-      forks: 4,
-      lastCommit: "30 minutes ago",
-      commits: 89,
-      contributors: 1,
-      activity: [
-        { type: "commit", message: "Add project filters", time: "30 minutes ago", author: "You" },
-        { type: "commit", message: "Improve AI assistant UI", time: "3 hours ago", author: "You" },
-        { type: "commit", message: "Add dark theme support", time: "5 hours ago", author: "You" }
-      ]
-    },
-    {
-      id: 3,
-      title: "Data Visualization Tool",
-      description: "Analytics dashboard for developers to visualize GitHub activity, code metrics, and productivity insights.",
-      longDescription: "A powerful tool that helps developers understand their coding patterns and productivity trends through beautiful visualizations.",
-      whyBuilt: "I noticed a lack of comprehensive tools for developers to analyze their own productivity and coding patterns. This tool fills that gap with actionable insights.",
-      tech: ["D3.js", "React", "Python", "FastAPI", "PostgreSQL"],
-      status: "Planning",
-      category: "pipeline",
-      githubUrl: "https://github.com/user/data-viz",
-      stars: 8,
-      forks: 2,
-      lastCommit: "1 week ago",
-      commits: 23,
-      contributors: 2,
-      activity: [
-        { type: "commit", message: "Initial project setup", time: "1 week ago", author: "You" },
-        { type: "commit", message: "Add basic chart components", time: "2 weeks ago", author: "You" }
-      ]
+  const getProjectData = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_DEV_URL}/project/all?status=${activeFilter}&keyword=${searchTerm}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+      setProjects(response?.data?.data)
+    } catch (error) {
+      console.log(error)
     }
-  ];
+  }
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = activeFilter === 'all' || project.category === activeFilter;
-    return matchesSearch && matchesFilter;
-  });
+  const getTechColor = (tech: string) => {
+    const techLower = tech.toLowerCase();
+    if (techLower.includes("react")) return "bg-blue-500/10 text-blue-400 border-blue-500/30";
+    if (techLower.includes("node")) return "bg-green-500/10 text-green-400 border-green-500/30";
+    if (techLower.includes("mongo")) return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+    if (techLower.includes("socket")) return "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
+    if (techLower.includes("nest")) return "bg-red-500/10 text-red-400 border-red-500/30";
+    return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+  };
+
+  const getFeatureColor = (feature: string) => {
+    const featureLower = feature.toLowerCase();
+    if (featureLower.includes("real-time") || featureLower.includes("live")) return "bg-primary/10 text-primary border-primary/30";
+    if (featureLower.includes("ai") || featureLower.includes("ml")) return "bg-accent/10 text-accent border-accent/30";
+    if (featureLower.includes("auth") || featureLower.includes("security")) return "bg-warning/10 text-warning border-warning/30";
+    return "bg-success/10 text-success border-success/30";
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'live': return 'bg-success/20 text-success border-success/40';
+      case 'development': return 'bg-primary/20 text-primary border-primary/40';
+      case 'ongoing': return 'bg-warning/20 text-warning border-warning/40';
+      case 'pipeline': return 'bg-accent/20 text-accent border-accent/40';
+      default: return 'bg-muted/20 text-muted-foreground border-muted/40';
+    }
+  };
+
+  const handleProjectClick = async (project: any, e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[role="tab"]') || target.closest('[role="tablist"]')) {
+      return;
+    }
+    if (selectedProjectId === project.id) {
+      setSelectedProjectId(null);
+      setGithubStats(null);
+      return;
+    }
+
+    setSelectedProjectId(project.id);
+    setIsLoadingStats(true);
+    setGithubStats(null);
+
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_DEV_URL}/githubstats/repo-data?owner=${import.meta.env.VITE_USER}&repo=${project?.repos?.[0]?.repoName}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      setGithubStats(response?.data)
+    } catch (error) {
+      console.log(error)
+      setGithubStats(null)
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  const handleActivityButtonClick = async (project: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedProjectId === project.id) {
+      setSelectedProjectId(null);
+      setGithubStats(null);
+      return;
+    }
+
+    setSelectedProjectId(project.id);
+    setIsLoadingStats(true);
+    setGithubStats(null);
+
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_DEV_URL}/githubstats/repo-data?owner=${import.meta.env.VITE_USER}&repo=${project?.repos?.[0]?.repoName}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      setGithubStats(response?.data)
+    } catch (error) {
+      console.log(error)
+      setGithubStats(null)
+    } finally {
+      setIsLoadingStats(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Unknown date';
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+      
+      if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+      return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    } catch {
+      return 'Unknown time';
+    }
+  };
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      getProjectData();
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [activeFilter, searchTerm]);
+
+  if (!projects) {
+    return (
+      <Loader/>
+    );
+  }
 
   return (
-    <div className="container py-8 space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl md:text-5xl font-bold">
-          <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Project Showcase
-          </span>
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Explore my development journey through detailed project insights, real-time GitHub activity, and collaborative opportunities.
-        </p>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search projects..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+    <div className="min-h-screen bg-background">
+      <div className="container py-8 space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl md:text-6xl font-bold">
+            <span className="bg-gradient-to-r from-primary via-accent to-success bg-clip-text text-transparent">
+              Project Showcase
+            </span>
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Explore my development journey through detailed project insights, real-time GitHub activity, and collaborative opportunities.
+          </p>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <Button
-            variant={activeFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveFilter('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={activeFilter === 'development' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveFilter('development')}
-          >
-            Development
-          </Button>
-          <Button
-            variant={activeFilter === 'pipeline' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveFilter('pipeline')}
-          >
-            Pipeline
-          </Button>
+
+        {/* Search and Filters */}
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search projects..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-card border-border/40"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            {['all', 'development', 'pipeline', 'live', 'ongoing'].map((filter) => (
+              <Button
+                key={filter}
+                variant={activeFilter === filter ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter(filter)}
+                className="capitalize"
+              >
+                {filter}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Projects Grid */}
-      <div className="space-y-8">
-        {filteredProjects.map((project) => (
-          <Card key={project.id} className="ai-card overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Project Info */}
-              <div className="lg:col-span-2 p-6">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-2">
-                      <h3 className="text-2xl font-bold">{project.title}</h3>
-                      <p className="text-muted-foreground">{project.description}</p>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-warning" />
-                        <span className="text-sm">{project.stars}</span>
+        {/* Projects Grid */}
+        <div className="space-y-8">
+          {projects?.map((project: any) => (
+            <Card 
+              key={project.id} 
+              className={`overflow-hidden bg-gradient-to-br from-card/95 to-card/80 border-border/40 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm cursor-pointer ${
+                selectedProjectId === project.id ? 'border-primary/60 shadow-[0_8px_30px_rgb(0,0,0,0.15)]' : ''
+              }`}
+              onClick={(e) => handleProjectClick(project, e)}
+            >
+              <div className={`grid gap-6 transition-all duration-300 ${
+                selectedProjectId === project.id && (githubStats || isLoadingStats) 
+                  ? 'grid-cols-1 lg:grid-cols-3' 
+                  : 'grid-cols-1'
+              }`}>
+                <div className={`${
+                  selectedProjectId === project.id && (githubStats || isLoadingStats) 
+                    ? 'lg:col-span-2' 
+                    : ''
+                } p-6`}>
+                  <div className="space-y-4">
+                    {/* Project Header */}
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2 flex-1">
+                        <h3 className="text-2xl font-bold text-foreground">{project.name}</h3>
+                        <p className="text-base text-muted-foreground leading-relaxed">
+                          {project.description}
+                        </p>
                       </div>
-                      <Badge
-                        variant={project.status === 'Live' ? 'default' : 'secondary'}
-                        className={project.status === 'Live' ? 'bg-success/10 text-success' : ''}
-                      >
-                        {project.status}
-                      </Badge>
+                      <div className="flex items-center space-x-4 flex-shrink-0 ml-4">
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 text-warning fill-warning" />
+                          <span className="text-sm font-medium">{project?.stars || 0}</span>
+                        </div>
+                        <Badge className={`${getStatusColor(project.status)} font-medium`}>
+                          {project?.status}
+                        </Badge>
+                        <Button 
+                          size="sm" 
+                          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                          onClick={(e) => handleActivityButtonClick(project, e)}
+                        >
+                          <Github className="w-4 h-4 mr-2" />
+                          {selectedProjectId === project.id ? 'Hide Activity' : 'View Activity'}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
 
-                  <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="overview">Overview</TabsTrigger>
-                      <TabsTrigger value="why">Why Built</TabsTrigger>
-                      <TabsTrigger value="activity">Activity</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="overview" className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        {project.longDescription}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tech.map((tech) => (
-                          <Badge key={tech} variant="secondary" className="text-xs">
-                            {tech}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="why" className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        {project.whyBuilt}
-                      </p>
-                    </TabsContent>
-                    
-                    <TabsContent value="activity" className="space-y-3">
-                      <div className="space-y-2">
-                        {project.activity?.map((activity, index) => (
-                          <div key={index} className="flex items-center space-x-3 text-sm p-2 rounded-md bg-muted/50">
-                            <div className="w-2 h-2 bg-primary rounded-full" />
-                            <div className="flex-1">
-                              <span className="font-medium">{activity.message}</span>
-                              <div className="text-muted-foreground text-xs">
-                                {activity.time} • {activity.author}
+                    {/* Project Tabs */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Tabs defaultValue="overview" className="w-full">
+                        <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+                          <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+                            Overview
+                          </TabsTrigger>
+                          <TabsTrigger value="why" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+                            Why Built
+                          </TabsTrigger>
+                          <TabsTrigger value="activity" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+                            Activity
+                          </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="overview" className="space-y-4 mt-4">
+                          {/* Key Features */}
+                          {project?.features && project.features.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center">
+                                <Zap className="w-4 h-4 mr-2 text-primary" />
+                                Key Features
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {project.features.map((feature: string, index: number) => (
+                                  <span
+                                    key={index}
+                                    className={`text-xs font-medium px-3 py-1.5 rounded-full border ${getFeatureColor(feature)} transition-all duration-200`}
+                                  >
+                                    {feature}
+                                  </span>
+                                ))}
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </TabsContent>
-                  </Tabs>
+                          )}
 
-                  <div className="flex flex-wrap gap-3 pt-4">
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
-                        <Github className="w-4 h-4 mr-2" />
-                        View Code
-                      </a>
-                    </Button>
-                    {project.liveUrl && (
+                          {/* Tech Stack */}
+                          {project?.techStack && project.techStack.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-foreground mb-3">Tech Stack</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {project.techStack.map((tech: string, index: number) => (
+                                  <span
+                                    key={index}
+                                    className={`text-xs font-medium px-2.5 py-1 rounded-full border ${getTechColor(tech)}`}
+                                  >
+                                    {tech}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="why" className="space-y-4 mt-4">
+                          <div className="min-h-[100px]">
+                            <p className="text-base text-foreground leading-relaxed">
+                              {project?.reasonBehindTheProject || 'No information available about why this project was built.'}
+                            </p>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="activity" className="space-y-3 mt-4">
+                          <div className="min-h-[100px]">
+                            {project.activity && project.activity.length > 0 ? (
+                              <div className="space-y-2">
+                                {project.activity.map((activity: any, index: number) => (
+                                  <div key={index} className="flex items-center space-x-3 text-sm p-3 rounded-lg bg-muted/30 border border-border/20">
+                                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0" />
+                                    <div className="flex-1">
+                                      <span className="font-medium text-foreground">{activity.message}</span>
+                                      <div className="text-muted-foreground text-xs">
+                                        {activity.time} • {activity.author}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-8 text-muted-foreground">
+                                No recent activity available
+                              </div>
+                            )}
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-3 pt-4" onClick={(e) => e.stopPropagation()}>
                       <Button variant="outline" size="sm" asChild>
-                        <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Live Demo
+                        <a 
+                          href={project.links?.[0]?.url || '#'} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Github className="w-4 h-4 mr-2" />
+                          View Code
                         </a>
                       </Button>
-                    )}
-                    <Button className="ai-button" size="sm">
-                      <Users className="w-4 h-4 mr-2" />
-                      Collaborate
-                    </Button>
+                      <Button variant="outline" size="sm" onClick={(e) => e.stopPropagation()}>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Live Demo
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Collaborate
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* GitHub Dashboard */}
-              <div className="p-6 bg-muted/30 border-l border-border/40">
-                <h4 className="font-semibold mb-4 flex items-center">
-                  <Activity className="w-4 h-4 mr-2" />
-                  GitHub Activity
-                </h4>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-primary">{project.commits}</div>
-                      <div className="text-xs text-muted-foreground">Commits</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-accent">{project.contributors}</div>
-                      <div className="text-xs text-muted-foreground">Contributors</div>
-                    </div>
-                  </div>
+                {/* GitHub Dashboard - Only show for selected project */}
+                {selectedProjectId === project.id && (
+                  <div className="p-6 bg-gradient-to-br from-muted/20 to-muted/10 border-l border-border/40">
+                    <h4 className="font-semibold mb-4 flex items-center text-foreground">
+                      <Activity className="w-4 h-4 mr-2 text-primary" />
+                      GitHub Activity {githubStats?.name && `- ${githubStats.name}`}
+                    </h4>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center space-x-2">
-                        <GitCommit className="w-3 h-3" />
-                        <span>Last Commit</span>
+                    {isLoadingStats ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        <span className="ml-2 text-sm text-muted-foreground">Loading GitHub data...</span>
                       </div>
-                      <span className="text-muted-foreground">{project.lastCommit}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center space-x-2">
-                        <GitBranch className="w-3 h-3" />
-                        <span>Forks</span>
-                      </div>
-                      <span className="text-muted-foreground">{project.forks}</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-border/40">
-                    <div className="text-xs text-muted-foreground mb-2">Recent Activity</div>
-                    <div className="space-y-1">
-                      {project.activity?.slice(0, 3).map((activity, index) => (
-                        <div key={index} className="text-xs p-2 rounded bg-background/50">
-                          <div className="font-medium truncate">{activity.message}</div>
-                          <div className="text-muted-foreground">{activity.time}</div>
+                    ) : githubStats ? (
+                      <div className="space-y-4">
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="text-center p-3 rounded-lg bg-background/50">
+                            <div className="text-lg font-bold text-primary">{githubStats?.commits_count || 0}</div>
+                            <div className="text-xs text-muted-foreground">Commits</div>
+                          </div>
+                          <div className="text-center p-3 rounded-lg bg-background/50">
+                            <div className="text-lg font-bold text-accent">{githubStats?.contributors?.length || 0}</div>
+                            <div className="text-xs text-muted-foreground">Contributors</div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
 
-      {filteredProjects.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-muted-foreground">No projects found matching your criteria.</div>
+                        {/* Repository Info */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="text-center p-3 rounded-lg bg-background/50">
+                            <div className="text-lg font-bold text-yellow-400">{githubStats?.stars || 0}</div>
+                            <div className="text-xs text-muted-foreground">Stars</div>
+                          </div>
+                          <div className="text-center p-3 rounded-lg bg-background/50">
+                            <div className="text-lg font-bold text-green-400">{githubStats?.forks || 0}</div>
+                            <div className="text-xs text-muted-foreground">Forks</div>
+                          </div>
+                        </div>
+
+                        {/* Additional Stats */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center space-x-2">
+                              <GitCommit className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-foreground">Pull Requests</span>
+                            </div>
+                            <span className="text-muted-foreground">{githubStats?.pullRequestsCount || 0}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center space-x-2">
+                              <GitBranch className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-foreground">Open Issues</span>
+                            </div>
+                            <span className="text-muted-foreground">{githubStats?.open_issues || 0}</span>
+                          </div>
+                        </div>
+
+                        {/* Languages */}
+                        {githubStats?.languages && Object.keys(githubStats.languages).length > 0 && (
+                          <div className="pt-2 border-t border-border/40">
+                            <div className="text-xs text-muted-foreground mb-2">Languages</div>
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(githubStats.languages).map(([language, bytes]) => (
+                                <span
+                                  key={language}
+                                  className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20"
+                                >
+                                  {language}: {typeof bytes === 'number' ? `${Math.round(bytes / 1024)}KB` : String(bytes)}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Contributors */}
+                        {githubStats?.contributors && githubStats.contributors.length > 0 && (
+                          <div className="pt-2 border-t border-border/40">
+                            <div className="text-xs text-muted-foreground mb-2">Contributors ({githubStats.contributors.length})</div>
+                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                              {githubStats.contributors.map((contributor: any, index: number) => (
+                                <div key={index} className="flex items-center justify-between text-xs p-2 rounded bg-background/30 border border-border/20">
+                                  <div className="font-medium text-foreground">{contributor.login}</div>
+                                  <div className="text-muted-foreground">{contributor.contributions} contributions</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recent Commits */}
+                        {githubStats?.commitMessages && Array.isArray(githubStats.commitMessages) && githubStats.commitMessages.length > 0 && (
+                          <div className="pt-2 border-t border-border/40">
+                            <div className="text-xs text-muted-foreground mb-2">Recent Commits</div>
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                              {githubStats.commitMessages.slice(0, 5).map((commit: any, index: number) => (
+                                <div key={index} className="text-xs p-2 rounded bg-background/30 border border-border/20">
+                                  <div className="font-medium truncate text-foreground">
+                                    {commit.message || 'No commit message'}
+                                  </div>
+                                  <div className="text-muted-foreground mt-1 flex items-center justify-between">
+                                    <span>{commit.author || 'Unknown'}</span>
+                                    <span>{commit.date ? formatTimeAgo(commit.date) : 'Unknown date'}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="text-muted-foreground text-sm">Failed to load GitHub data</div>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="mt-2"
+                          onClick={() => handleActivityButtonClick(project, { stopPropagation: () => {} } as React.MouseEvent)}
+                        >
+                          Try Again
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
+          ))}
         </div>
-      )}
+
+        {projects?.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-muted-foreground">No projects found matching your criteria.</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

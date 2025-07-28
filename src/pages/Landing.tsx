@@ -3,9 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Code2, Brain, Zap, Github, Linkedin } from 'lucide-react';
 // import heroImage from '@/assets/hero-bg.jpg';
 import { Button } from '../components/ui/button';
+import { useSelector } from 'react-redux';
 
 const Landing: React.FC = () => {
   const navigate = useNavigate();
+  const user=useSelector((state :any)=>state.auth.user)
+const accessToken=useSelector((state :any)=>state.auth.accessToken)
+
+
+
+
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -39,14 +46,9 @@ const Landing: React.FC = () => {
             </span>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button asChild className="ai-button">
-              <Link to="/register">Get Started</Link>
-            </Button>
-          </div>
+           <div className="flex items-center space-x-6">
+  
+    </div>
         </nav>
 
         {/* Hero Section */}
@@ -70,20 +72,19 @@ const Landing: React.FC = () => {
               <Button 
                 size="lg" 
                 className="ai-button text-lg px-8 py-6"
-                onClick={() => navigate('/register')}
+                onClick={() => navigate('/home')}
               >
                 Explore Portfolio
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="text-lg px-8 py-6 glass-effect border-primary/20 hover:border-primary/40"
-                onClick={() => navigate('/login')}
-              >
-                <Github className="mr-2 w-5 h-5" />
-                View Code
-              </Button>
+           <Link 
+  to="https://github.com/subhadip2111"
+  className="flex items-center gap-2 text-lg px-6 py-3 border rounded-md border-primary/20 hover:border-primary/40 transition-colors duration-200"
+>
+  <Github className="w-5 h-5" />
+  <span>View Code</span>
+</Link>
+
             </div>
           </div>
         </div>
@@ -137,7 +138,7 @@ const Landing: React.FC = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="py-20 px-6">
+        {/* <div className="py-20 px-6">
           <div className="max-w-4xl mx-auto text-center">
             <div className="ai-card p-12 rounded-2xl space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold">
@@ -166,7 +167,7 @@ const Landing: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
